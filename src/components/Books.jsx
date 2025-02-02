@@ -1,17 +1,29 @@
-import { useQuery } from '@apollo/client'
-import { ALL_BOOKS } from '../queries'
+import { useQuery, useSubscription } from '@apollo/client'
+import { ALL_BOOKS, FIND_BOOKS_BY_GENRE, BOOK_ADDED } from '../queries'
 import { useState, useEffect, useRef } from 'react'
 import '../tableData.css'
 const Books = () => {
   const [genre, setGenre] = useState('allGenres')
   const genresRef = useRef([]);
-  const resultBooks = useQuery(ALL_BOOKS)
+  const resultBooks = useQuery(FIND_BOOKS_BY_GENRE, {
+    variables: { genre },
+    skip: !genre,
+  })
+
+
+  useSubscription(BOOK_ADDED, {
+    onData: (data) => {
+      console.log(data)
+      const addedBook = data.data.bookAdded
+      alert(`${addedBook.title} added`)
+    }
+  })
 
 
   if (resultBooks.loading) {
     return <div>loading...</div>
   }else{
-    const genres = resultBooks.data.allBooks.map(p=> p.genres)
+    const genres = resultBooks.data.findBooksByGenre.map(p=> p.genres)
     genresRef.current= [...new Set(genres.flat()), 'allGenres']
   }
 
@@ -28,8 +40,7 @@ const Books = () => {
           </tr>
         </thead>
         <tbody>
-          {resultBooks.data.allBooks
-          .filter(p=> genre === 'allGenres' || p.genres.includes(genre) )
+          {resultBooks.data.findBooksByGenre
           .map(p => 
             <tr key={p.title}>
               <th>{p.title}</th>

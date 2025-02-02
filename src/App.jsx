@@ -1,5 +1,6 @@
 import { Link, Routes, Route, useNavigate } from 'react-router-dom'
-import { useApolloClient } from '@apollo/client'
+import { useApolloClient, useSubscription } from '@apollo/client'
+import { CREATE_BOOK, FIND_BOOKS_BY_GENRE, BOOK_ADDED } from './queries'
 import Home from './components/Home'
 import Authors from './components/Authors'
 import Books from './components/Books'
@@ -20,6 +21,16 @@ const App = () => {
     client.resetStore()
     navigate('/')
   }
+
+  useSubscription(BOOK_ADDED, {
+    onData: ({data}) => {
+      const addedBook = data.data.bookAdded
+      alert(`${addedBook.title} added`)
+    },
+    onError: (error) => {
+      console.error('❌ Error en la suscripción:', error);
+    },
+  })
 
   const notify = (message) => {
     setErrorMessage(message)

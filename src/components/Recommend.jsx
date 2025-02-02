@@ -1,14 +1,22 @@
 import { useQuery } from '@apollo/client'
-import { ALL_BOOKS, ME } from '../queries'
-import { useState } from 'react'
+import { FIND_BOOKS_BY_GENRE, ME } from '../queries'
+import { useState, useEffect } from 'react'
 import '../tableData.css'
 const Recommend = () => {
-  const [genre, setGenre] = useState('allGenres')
-  const resultBooks = useQuery(ALL_BOOKS)
+  const [genre, setGenre] = useState(null)
+  const resultBooks = useQuery(FIND_BOOKS_BY_GENRE, {
+    variables: { genre },
+    skip: genre===null,
+  })
   const resultMe = useQuery(ME)
 
+  useEffect(() => {
+    if (resultMe.data && resultMe.data.me) {
+      setGenre(resultMe.data.me.favoriteGenre);
+    }
+  }, [resultMe.data]); // Se ejecuta solo cuando resultMe.data cambia
 
-  if (resultBooks.loading || resultMe.loading) {
+  if (resultMe.loading || genre === null || resultBooks.loading) {
     return <div>loading...</div>
   }
 
@@ -25,8 +33,7 @@ const Recommend = () => {
           </tr>
         </thead>
         <tbody>
-          {resultBooks.data.allBooks
-          .filter(p=> p.genres.includes(resultMe.data.me.favoriteGenre) )
+          {resultBooks.data.findBooksByGenre
           .map(p => 
             <tr key={p.title}>
               <th>{p.title}</th>
